@@ -96,6 +96,41 @@ class FlagManagerTest {
     }
 
     @Test
+    fun reportsUsageWithInlineDefaultValueWhenFlagFound() {
+        val apiClient = FakeApiClient(response = rulesWithBooleanFlag())
+        val manager = FlagManager(
+            apiClient = apiClient,
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        manager.single("new-dashboard", false)
+
+        assertThat(apiClient.lastReportedKey).isEqualTo("new-dashboard")
+        assertThat(apiClient.lastDefaultValue).isEqualTo(false)
+    }
+
+    @Test
+    fun reportsUsageWithDefaultsCollectionValueWhenFlagFound() {
+        val apiClient = FakeApiClient(response = rulesWithBooleanFlag())
+        val manager = FlagManager(
+            apiClient = apiClient,
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        val defaults = DefaultsCollection().set("new-dashboard", true)
+        manager.withDefaults(defaults).single("new-dashboard")
+
+        assertThat(apiClient.lastReportedKey).isEqualTo("new-dashboard")
+        assertThat(apiClient.lastDefaultValue).isEqualTo(true)
+    }
+
+    @Test
     fun throwsWhenFlagMissingAndNoDefaults() {
         val manager = FlagManager(
             apiClient = FakeApiClient(response = RulesResponse(version = "1", flags = emptyList())),
