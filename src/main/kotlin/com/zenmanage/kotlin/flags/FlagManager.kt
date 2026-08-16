@@ -34,7 +34,7 @@ public class FlagManager(
 
         val matched = sharedState.flags.orEmpty().firstOrNull { it.key == key }
         if (matched != null) {
-            reportUsage(key, usageContext())
+            reportUsage(key, usageContext(), resolveEffectiveDefault(key, defaultValue))
             return evaluateFlag(matched)
         }
 
@@ -67,6 +67,13 @@ public class FlagManager(
     public fun refreshRules(): Unit {
         logger.info("Refreshing rules from API")
         loadRulesFromApi()
+    }
+
+    private fun resolveEffectiveDefault(key: String, defaultValue: Any?): Any? {
+        if (defaultValue != null) {
+            return defaultValue
+        }
+        return if (defaults.has(key)) defaults.get(key) else null
     }
 
     private fun usageContext(): Context? {
