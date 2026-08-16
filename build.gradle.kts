@@ -27,9 +27,8 @@ dependencies {
     testImplementation("com.google.android:android:4.1.1.4")
 }
 
-tasks.withType<JavaCompile> {
-    sourceCompatibility = "23"
-    targetCompatibility = "23"
+kotlin {
+    jvmToolchain(21)
 }
 
 tasks.withType<KotlinCompile>().configureEach {

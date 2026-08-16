@@ -29,7 +29,7 @@ public open class ApiClient(
     private val baseHeaders: Map<String, String> = mapOf(
         "Accept" to "application/json",
         "Content-Type" to "application/json",
-        "X-API-Key" to environmentToken,
+        "X-ZEN-API-KEY" to environmentToken,
         "X-ZEN-CLIENT-AGENT" to "$clientAgent/$sdkVersion"
     )
 
@@ -88,7 +88,7 @@ public open class ApiClient(
 
         if (context != null && shouldSendContext(context)) {
             runCatching {
-                requestBuilder.header("X-ZENMANAGE-CONTEXT", objectMapper.writeValueAsString(context.toMap()))
+                requestBuilder.header("X-ZEN-CONTEXT", objectMapper.writeValueAsString(context.toMap()))
             }.onFailure {
                 logger.debug("Failed to encode usage context")
             }
@@ -96,7 +96,7 @@ public open class ApiClient(
 
         if (defaultValue != null) {
             runCatching {
-                requestBuilder.header("X-DEFAULT-VALUE", objectMapper.writeValueAsString(mapOf(key to defaultValue)))
+                requestBuilder.header("X-ZEN-DEFAULT-VALUE", objectMapper.writeValueAsString(mapOf(key to defaultValue)))
             }.onFailure {
                 logger.debug("Failed to encode usage default value")
             }
