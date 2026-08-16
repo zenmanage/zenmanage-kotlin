@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zenmanage Kotlin Example</string>
+    <string name="title_text">Zenmanage Android Integration</string>
+    <string name="subtitle_text">This sample evaluates the new-mobile-experience flag and caches rules in SharedPreferences.</string>
+    <string name="evaluate_button_label">Evaluate Flag</string>
+    <string name="initial_status">Tap Evaluate Flag to load the current value.</string>
+    <string name="loading_message">Checking flag value from cache/API...</string>
+    <string name="flag_enabled">new-mobile-experience is ENABLED for this context.</string>
+    <string name="flag_disabled">new-mobile-experience is DISABLED for this context.</string>
+</resources>
