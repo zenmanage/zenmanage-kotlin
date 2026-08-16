@@ -43,7 +43,7 @@ class ApiClientTest {
 
         val headers = capturedHeaders.poll(5, TimeUnit.SECONDS)
         assertThat(headers).isNotNull()
-        assertThat(headers!!["X-Default-Value"]?.get(0)).isEqualTo("{\"new-ui\":true}")
+        assertThat(headers!!["X-Zen-Default-Value"]?.get(0)).isEqualTo("{\"new-ui\":true}")
     }
 
     @Test
@@ -54,7 +54,7 @@ class ApiClientTest {
 
         val headers = capturedHeaders.poll(5, TimeUnit.SECONDS)
         assertThat(headers).isNotNull()
-        assertThat(headers!!["X-Default-Value"]?.get(0)).isEqualTo("{\"num-flag\":42}")
+        assertThat(headers!!["X-Zen-Default-Value"]?.get(0)).isEqualTo("{\"num-flag\":42}")
     }
 
     @Test
@@ -65,7 +65,7 @@ class ApiClientTest {
 
         val headers = capturedHeaders.poll(5, TimeUnit.SECONDS)
         assertThat(headers).isNotNull()
-        assertThat(headers!!.containsKey("X-Default-Value")).isFalse()
+        assertThat(headers!!.containsKey("X-Zen-Default-Value")).isFalse()
     }
 
     @Test
@@ -76,8 +76,8 @@ class ApiClientTest {
 
         val headers = capturedHeaders.poll(5, TimeUnit.SECONDS)
         assertThat(headers).isNotNull()
-        assertThat(headers!!["X-Default-Value"]?.get(0)).isEqualTo("{\"num-flag\":42}")
-        assertThat(headers.containsKey("X-Zenmanage-Context")).isTrue()
+        assertThat(headers!!["X-Zen-Default-Value"]?.get(0)).isEqualTo("{\"num-flag\":42}")
+        assertThat(headers.containsKey("X-Zen-Context")).isTrue()
     }
 
     @Test
