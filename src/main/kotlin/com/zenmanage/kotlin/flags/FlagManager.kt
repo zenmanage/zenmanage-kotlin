@@ -24,7 +24,7 @@ public class FlagManager(
 ) {
     public fun all(): List<Flag> {
         ensureRulesLoaded()
-        return sharedState.flags.orEmpty().map(::evaluateFlag)
+        return sharedState.flags.orEmpty().filter { it.type != FlagType.UNKNOWN }.map(::evaluateFlag)
     }
 
     public fun single(key: String): Flag = single(key, null)
@@ -32,7 +32,7 @@ public class FlagManager(
     public fun single(key: String, defaultValue: Any?): Flag {
         ensureRulesLoaded()
 
-        val matched = sharedState.flags.orEmpty().firstOrNull { it.key == key }
+        val matched = sharedState.flags.orEmpty().firstOrNull { it.key == key && it.type != FlagType.UNKNOWN }
         if (matched != null) {
             reportUsage(key, usageContext(), resolveEffectiveDefault(key, defaultValue))
             return evaluateFlag(matched)
@@ -95,7 +95,9 @@ public class FlagManager(
             }.onSuccess { cachedResponse ->
                 val cachedFlags = cachedResponse.flags
                 if (cachedFlags != null) {
-                    sharedState.flags = cachedFlags.map(Flag::fromData)
+                    val flags = cachedFlags.map(Flag::fromData)
+                    logUnknownFlagTypes(flags)
+                    sharedState.flags = flags
                     return
                 }
             }.onFailure {
@@ -109,12 +111,19 @@ public class FlagManager(
     private fun loadRulesFromApi(): Unit {
         val response = apiClient.getRules()
         val flags = response.flags.orEmpty().map(Flag::fromData)
+        logUnknownFlagTypes(flags)
         sharedState.flags = flags
 
         runCatching {
             cache.set(CACHE_KEY, objectMapper.writeValueAsString(response), cacheTtlSeconds.toLong())
         }.onFailure {
             logger.warn("Failed to serialize rules for cache")
+        }
+    }
+
+    private fun logUnknownFlagTypes(flags: List<Flag>): Unit {
+        flags.filter { it.type == FlagType.UNKNOWN }.forEach { flag ->
+            logger.warn("Flag '${flag.key}' has an unrecognized type; falling back to the caller's default value")
         }
     }
 
