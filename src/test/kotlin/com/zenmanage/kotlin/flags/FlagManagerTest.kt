@@ -1,7 +1,11 @@
 package com.zenmanage.kotlin.flags
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zenmanage.kotlin.api.ApiClient
 import com.zenmanage.kotlin.cache.InMemoryCache
+import com.zenmanage.kotlin.config.Logger
 import com.zenmanage.kotlin.config.NullLogger
 import com.zenmanage.kotlin.context.Context
 import com.zenmanage.kotlin.errors.EvaluationException
@@ -206,6 +210,94 @@ class FlagManagerTest {
         assertThat(second).isEqualTo(first)
     }
 
+    @Test
+    fun parsesJsonTypedFlagAlongsideOthersWithoutThrowingAndFallsBackToDefault() {
+        val logger = RecordingLogger()
+        val manager = FlagManager(
+            apiClient = JsonRulesApiClient(rulesPayloadWithJsonFlag()),
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = logger
+        )
+
+        // The other flags in the same payload still evaluate correctly.
+        assertThat(manager.single("bool-flag", false).isEnabled()).isTrue()
+        assertThat(manager.single("string-flag", "unused-default").asString()).isEqualTo("hello")
+        assertThat(manager.single("number-flag", 0).asNumber()).isEqualTo(42.0)
+
+        // The json-typed flag resolves to the caller's default rather than throwing.
+        val jsonFlag = manager.single("json-flag", "fallback-default")
+        assertThat(jsonFlag.asString()).isEqualTo("fallback-default")
+
+        // It also degrades via a DefaultsCollection fallback, not just an inline default.
+        val defaults = DefaultsCollection().set("json-flag", "collection-fallback")
+        assertThat(manager.withDefaults(defaults).single("json-flag").asString()).isEqualTo("collection-fallback")
+
+        // all() silently excludes the unknown-type flag rather than failing the whole call.
+        assertThat(manager.all().map { it.key }).containsExactlyInAnyOrder("bool-flag", "string-flag", "number-flag")
+
+        // The unrecognized type is logged once rather than swallowed silently.
+        assertThat(logger.warnings).anyMatch { it.contains("json-flag") }
+    }
+
+    @Test
+    fun jsonTypedFlagWithNoDefaultBehavesLikeAMissingFlag() {
+        val manager = FlagManager(
+            apiClient = JsonRulesApiClient(rulesPayloadWithJsonFlag()),
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        assertThrows(EvaluationException::class.java) {
+            manager.single("json-flag")
+        }
+    }
+
+    private fun rulesPayloadWithJsonFlag(): String {
+        return """
+            {
+              "version": "1",
+              "flags": [
+                {
+                  "version": "1",
+                  "type": "boolean",
+                  "key": "bool-flag",
+                  "name": "bool-flag",
+                  "target": { "value": { "value": { "boolean": true } } },
+                  "rules": []
+                },
+                {
+                  "version": "1",
+                  "type": "string",
+                  "key": "string-flag",
+                  "name": "string-flag",
+                  "target": { "value": { "value": { "string": "hello" } } },
+                  "rules": []
+                },
+                {
+                  "version": "1",
+                  "type": "number",
+                  "key": "number-flag",
+                  "name": "number-flag",
+                  "target": { "value": { "value": { "number": 42 } } },
+                  "rules": []
+                },
+                {
+                  "version": "1",
+                  "type": "json",
+                  "key": "json-flag",
+                  "name": "json-flag",
+                  "target": { "value": { "value": { "json": { "nested": true } } } },
+                  "rules": []
+                }
+              ]
+            }
+        """.trimIndent()
+    }
+
     private fun rulesWithBooleanFlag(): RulesResponse {
         return RulesResponse(
             version = "1",
@@ -239,5 +331,40 @@ class FlagManagerTest {
             lastReportedKey = key
             lastDefaultValue = defaultValue
         }
+    }
+
+    /**
+     * Parses a raw rules JSON string the same way [com.zenmanage.kotlin.api.ApiClient.getRules] does,
+     * so tests exercise real Jackson deserialization (including [FlagType.fromWireValue]) rather than
+     * constructing domain objects directly.
+     */
+    private class JsonRulesApiClient(private val rawJson: String) : ApiClient(
+        environmentToken = "mob_test",
+        apiEndpoint = "https://example.com",
+        logger = NullLogger(),
+        usageReportingEnabled = false,
+        sdkVersion = "test",
+        clientAgent = "zenmanage-kotlin-test"
+    ) {
+        private val objectMapper: ObjectMapper =
+            jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+        override fun getRules(): RulesResponse = objectMapper.readValue(rawJson, RulesResponse::class.java)
+
+        override fun reportUsage(key: String, context: Context?, defaultValue: Any?): Unit = Unit
+    }
+
+    private class RecordingLogger : Logger {
+        val warnings: MutableList<String> = mutableListOf()
+
+        override fun debug(message: String): Unit = Unit
+
+        override fun info(message: String): Unit = Unit
+
+        override fun warn(message: String): Unit {
+            warnings.add(message)
+        }
+
+        override fun error(message: String, throwable: Throwable): Unit = Unit
     }
 }
