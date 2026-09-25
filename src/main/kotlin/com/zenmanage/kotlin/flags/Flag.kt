@@ -34,6 +34,24 @@ public data class Flag(
         }
     }
 
+    /**
+     * Returns the decoded value of a `json`-typed flag. Both JSON objects and JSON arrays are
+     * valid decoded shapes here: an object decodes to a `Map<String, Any?>`, an array decodes to
+     * a `List<Any?>`, matching how the rest of the SDK already parses structured API values.
+     *
+     * Only recognizes this flag's own `json` value wrapper. Called on any other flag type — or on
+     * a `json` flag whose decoded value isn't itself an object or array (a bare JSON scalar) — this
+     * falls back to an empty map, the same "safe zero value" behavior `asString()`/`asNumber()` use
+     * for their own types, rather than attempting a lossy conversion.
+     */
+    public fun asJson(): Any {
+        return when (val value = target?.value?.value?.jsonValue) {
+            is Map<*, *> -> value
+            is List<*> -> value
+            else -> emptyMap<String, Any?>()
+        }
+    }
+
     public fun getValue(): Any {
         return target?.value?.value?.toKotlinValue() ?: ""
     }

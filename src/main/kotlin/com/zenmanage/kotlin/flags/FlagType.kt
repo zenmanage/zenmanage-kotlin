@@ -7,13 +7,14 @@ public enum class FlagType(@get:JsonValue val wireValue: String) {
     BOOLEAN("boolean"),
     STRING("string"),
     NUMBER("number"),
+    JSON("json"),
 
     /**
      * Sentinel for any flag type not yet recognized by this SDK release (for example, a
-     * future "json" flag type). Flags parsed with this type are treated like a missing flag
-     * during evaluation: they fall back to the caller's default rather than throwing, so a
-     * single unrecognized flag in a rules payload never breaks parsing of the whole payload
-     * or evaluation of the other flags in it.
+     * future type introduced after this release). Flags parsed with this type are treated
+     * like a missing flag during evaluation: they fall back to the caller's default rather
+     * than throwing, so a single unrecognized flag in a rules payload never breaks parsing
+     * of the whole payload or evaluation of the other flags in it.
      */
     UNKNOWN("unknown");
 

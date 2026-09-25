@@ -211,10 +211,10 @@ class FlagManagerTest {
     }
 
     @Test
-    fun parsesJsonTypedFlagAlongsideOthersWithoutThrowingAndFallsBackToDefault() {
+    fun parsesUnrecognizedTypedFlagAlongsideOthersWithoutThrowingAndFallsBackToDefault() {
         val logger = RecordingLogger()
         val manager = FlagManager(
-            apiClient = JsonRulesApiClient(rulesPayloadWithJsonFlag()),
+            apiClient = JsonRulesApiClient(rulesPayloadWithUnrecognizedTypeFlag()),
             cache = InMemoryCache(),
             ruleEngine = RuleEngine(),
             cacheTtlSeconds = 60,
@@ -226,23 +226,38 @@ class FlagManagerTest {
         assertThat(manager.single("string-flag", "unused-default").asString()).isEqualTo("hello")
         assertThat(manager.single("number-flag", 0).asNumber()).isEqualTo(42.0)
 
-        // The json-typed flag resolves to the caller's default rather than throwing.
-        val jsonFlag = manager.single("json-flag", "fallback-default")
-        assertThat(jsonFlag.asString()).isEqualTo("fallback-default")
+        // The unrecognized-typed flag resolves to the caller's default rather than throwing.
+        val futureFlag = manager.single("future-flag", "fallback-default")
+        assertThat(futureFlag.asString()).isEqualTo("fallback-default")
 
         // It also degrades via a DefaultsCollection fallback, not just an inline default.
-        val defaults = DefaultsCollection().set("json-flag", "collection-fallback")
-        assertThat(manager.withDefaults(defaults).single("json-flag").asString()).isEqualTo("collection-fallback")
+        val defaults = DefaultsCollection().set("future-flag", "collection-fallback")
+        assertThat(manager.withDefaults(defaults).single("future-flag").asString()).isEqualTo("collection-fallback")
 
         // all() silently excludes the unknown-type flag rather than failing the whole call.
         assertThat(manager.all().map { it.key }).containsExactlyInAnyOrder("bool-flag", "string-flag", "number-flag")
 
         // The unrecognized type is logged once rather than swallowed silently.
-        assertThat(logger.warnings).anyMatch { it.contains("json-flag") }
+        assertThat(logger.warnings).anyMatch { it.contains("future-flag") }
     }
 
     @Test
-    fun jsonTypedFlagWithNoDefaultBehavesLikeAMissingFlag() {
+    fun unrecognizedTypedFlagWithNoDefaultBehavesLikeAMissingFlag() {
+        val manager = FlagManager(
+            apiClient = JsonRulesApiClient(rulesPayloadWithUnrecognizedTypeFlag()),
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        assertThrows(EvaluationException::class.java) {
+            manager.single("future-flag")
+        }
+    }
+
+    @Test
+    fun parsesRulesPayloadWithJsonFlagAlongsideOtherTypesAndEvaluatesAllOfThemNormally() {
         val manager = FlagManager(
             apiClient = JsonRulesApiClient(rulesPayloadWithJsonFlag()),
             cache = InMemoryCache(),
@@ -251,9 +266,88 @@ class FlagManagerTest {
             logger = NullLogger()
         )
 
-        assertThrows(EvaluationException::class.java) {
-            manager.single("json-flag")
-        }
+        // The json flag evaluates like any other known type: no default fallback, real decoded value.
+        val jsonFlag = manager.single("json-flag", "unused-default")
+        assertThat(jsonFlag.asJson()).isEqualTo(mapOf("nested" to true, "count" to 3.5))
+        assertThat(jsonFlag.asString()).isEqualTo("")
+        assertThat(jsonFlag.asNumber()).isEqualTo(0.0)
+
+        // The other flags in the same payload are unaffected by the json flag's presence.
+        assertThat(manager.single("bool-flag", false).isEnabled()).isTrue()
+        assertThat(manager.single("string-flag", "unused-default").asString()).isEqualTo("hello")
+        assertThat(manager.single("number-flag", 0).asNumber()).isEqualTo(42.0)
+
+        // all() now includes the json flag alongside the other recognized types.
+        assertThat(manager.all().map { it.key })
+            .containsExactlyInAnyOrder("bool-flag", "string-flag", "number-flag", "json-flag")
+    }
+
+    @Test
+    fun mapAndListDefaultsAreTypedAsJsonRatherThanStringified() {
+        val manager = FlagManager(
+            apiClient = FakeApiClient(response = RulesResponse(version = "1", flags = emptyList())),
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        val mapDefaultFlag = manager.single("missing-map", mapOf("enabled" to true, "limit" to 5.0))
+        assertThat(mapDefaultFlag.type).isEqualTo(FlagType.JSON)
+        assertThat(mapDefaultFlag.asJson()).isEqualTo(mapOf("enabled" to true, "limit" to 5.0))
+        assertThat(mapDefaultFlag.asString()).isEqualTo("")
+
+        val listDefaultFlag = manager.single("missing-list", listOf(1.0, 2.0, 3.0))
+        assertThat(listDefaultFlag.type).isEqualTo(FlagType.JSON)
+        assertThat(listDefaultFlag.asJson()).isEqualTo(listOf(1.0, 2.0, 3.0))
+
+        // Also works via a DefaultsCollection, not just an inline default.
+        val defaults = DefaultsCollection().set("missing-from-collection", mapOf("a" to 1.0))
+        val fromCollection = manager.withDefaults(defaults).single("missing-from-collection")
+        assertThat(fromCollection.type).isEqualTo(FlagType.JSON)
+        assertThat(fromCollection.asJson()).isEqualTo(mapOf("a" to 1.0))
+    }
+
+    private fun rulesPayloadWithUnrecognizedTypeFlag(): String {
+        return """
+            {
+              "version": "1",
+              "flags": [
+                {
+                  "version": "1",
+                  "type": "boolean",
+                  "key": "bool-flag",
+                  "name": "bool-flag",
+                  "target": { "value": { "value": { "boolean": true } } },
+                  "rules": []
+                },
+                {
+                  "version": "1",
+                  "type": "string",
+                  "key": "string-flag",
+                  "name": "string-flag",
+                  "target": { "value": { "value": { "string": "hello" } } },
+                  "rules": []
+                },
+                {
+                  "version": "1",
+                  "type": "number",
+                  "key": "number-flag",
+                  "name": "number-flag",
+                  "target": { "value": { "value": { "number": 42 } } },
+                  "rules": []
+                },
+                {
+                  "version": "1",
+                  "type": "some-future-type",
+                  "key": "future-flag",
+                  "name": "future-flag",
+                  "target": { "value": { "value": { "future-type": "whatever" } } },
+                  "rules": []
+                }
+              ]
+            }
+        """.trimIndent()
     }
 
     private fun rulesPayloadWithJsonFlag(): String {
@@ -290,7 +384,7 @@ class FlagManagerTest {
                   "type": "json",
                   "key": "json-flag",
                   "name": "json-flag",
-                  "target": { "value": { "value": { "json": { "nested": true } } } },
+                  "target": { "value": { "value": { "json": { "nested": true, "count": 3.5 } } } },
                   "rules": []
                 }
               ]

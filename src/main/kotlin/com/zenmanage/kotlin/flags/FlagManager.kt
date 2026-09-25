@@ -170,6 +170,8 @@ public class FlagManager(
         val type = when (defaultValue) {
             is Boolean -> FlagType.BOOLEAN
             is Number -> FlagType.NUMBER
+            is Map<*, *> -> FlagType.JSON
+            is List<*> -> FlagType.JSON
             else -> FlagType.STRING
         }
 
