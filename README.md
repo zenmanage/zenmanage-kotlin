@@ -92,6 +92,16 @@ val version = zenmanage.flags()
     .asString()
 ```
 
+### JSON Flags
+
+```kotlin
+val config = zenmanage.flags()
+    .single("checkout-config", mapOf("maxItems" to 10, "theme" to "dark"))
+    .asJson()
+```
+
+`asJson()` decodes both JSON objects (as `Map<String, Any?>`) and JSON arrays (as `List<Any?>`).
+
 ### Percentage Rollouts
 
 ```kotlin
@@ -104,6 +114,27 @@ val inRollout = zenmanage.flags()
     .single("new-checkout-flow", false)
     .isEnabled()
 ```
+
+## Value Types & Cross-Type Coercion
+
+A flag's `type` is one of `boolean`, `string`, `number`, or `json`. Each type has a matching accessor (`asBool()`, `asString()`, `asNumber()`, `asJson()`), plus `isEnabled()` for boolean flags specifically.
+
+`asJson()` returns the decoded value: a JSON object decodes to `Map<String, Any?>`, a JSON array decodes to `List<Any?>`.
+
+`asString()`, `asNumber()`, and `asJson()` each only recognize their own value wrapper (`{"string": …}`, `{"number": …}`, `{"json": …}`) and fall back to a safe zero value for every other type — they never attempt a lossy conversion between types:
+
+| Called on →<br>Flag type ↓ | `asString()` | `asNumber()` | `asJson()` |
+|---|---|---|---|
+| `boolean` | `""` | `0` | `emptyMap()` |
+| `string` | the string | `0` | `emptyMap()` |
+| `number` | `""` | the number | `emptyMap()` |
+| `json` | `""` | `0` | the decoded map/list |
+
+`isEnabled()` returns `false` outright for any non-boolean flag — use it, not `asBool()`, when you specifically mean "is this boolean flag on". A `json` flag whose decoded value isn't itself an object or array (a bare JSON scalar such as `5` or `"x"`, which the API allows but which real flags won't normally use) makes `asJson()` return `emptyMap()` too — the same safe-zero-value behavior as calling it on a non-json flag, rather than wrapping the scalar or throwing.
+
+`asBool()` predates this coercion convention and behaves differently: rather than switching on the flag's `type`, it coerces whatever the underlying value happens to be (a non-boolean `Number` is truthy if non-zero, a non-boolean `String` is parsed with `toBooleanStrictOrNull()`, and a `json` value — which `asBool()` does not look at — falls back to `false`). This SDK's `asBool()` is intentionally left as-is here; only `asJson()` follows the "recognize your own type, safe zero value otherwise" rule strictly.
+
+**Default values** passed to `single(key, default)` or `DefaultsCollection` are typed from the Kotlin value itself: a `Map` or `List` default becomes a `json`-typed flag (not a stringified fallback), so `asJson()` on a missing flag with a `Map`/`List` default returns that value unchanged.
 
 ## Caching
 

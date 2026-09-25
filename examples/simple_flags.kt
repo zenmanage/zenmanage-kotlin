@@ -17,6 +17,9 @@ fun main() {
     val numberFlag = zenmanage.flags().single("example-number-flag", 42)
     println("Number flag: ${numberFlag.asNumber()}")
 
+    val jsonFlag = zenmanage.flags().single("example-json-flag", mapOf("theme" to "dark", "maxItems" to 10))
+    println("JSON flag: ${jsonFlag.asJson()}")
+
     val all = zenmanage.flags().all()
     println("Total flags loaded: ${all.size}")
 }
