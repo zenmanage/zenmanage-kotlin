@@ -30,9 +30,7 @@ public class FlagManager(
     public fun single(key: String): Flag = single(key, null)
 
     public fun single(key: String, defaultValue: Any?): Flag {
-        ensureRulesLoaded()
-
-        val matched = sharedState.flags.orEmpty().firstOrNull { it.key == key && it.type != FlagType.UNKNOWN }
+        val matched = loadFlagsOrFallBackToDefaults().firstOrNull { it.key == key && it.type != FlagType.UNKNOWN }
         if (matched != null) {
             reportUsage(key, usageContext(), resolveEffectiveDefault(key, defaultValue))
             return evaluateFlag(matched)
@@ -81,6 +79,23 @@ public class FlagManager(
             return null
         }
         return context
+    }
+
+    /**
+     * Load the current flag set, falling back to an empty list (so [single] falls through to its
+     * own default handling) if rule-loading fails outright — for example an unreachable/invalid
+     * environment key. Mirrors the reference PHP SDK's `loadFlagsOrFallBackToDefaults()`: an
+     * inline or [DefaultsCollection] default supplied to [single] must still be served even when
+     * the rules fetch itself throws, rather than that exception propagating out of [single].
+     */
+    private fun loadFlagsOrFallBackToDefaults(): List<Flag> {
+        return runCatching {
+            ensureRulesLoaded()
+            sharedState.flags.orEmpty()
+        }.getOrElse { e ->
+            logger.warn("Failed to load rules, falling back to configured defaults: ${e.message}")
+            emptyList()
+        }
     }
 
     @Synchronized

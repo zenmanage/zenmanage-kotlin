@@ -16,12 +16,20 @@ public data class Flag(
         return getValue() as? Boolean ?: false
     }
 
+    /**
+     * Returns `true` for every non-boolean-typed flag, regardless of the underlying value —
+     * including a `number` flag set to `0`, or a `string` flag set to `""`. This matches the
+     * reference PHP SDK's documented cross-type coercion contract: calling the "wrong" accessor
+     * never attempts a lossy conversion between types, it just returns a safe value, and for
+     * `asBool()` specifically that safe value is unconditionally `true` for anything that isn't
+     * itself a `boolean` flag. Use [isEnabled] when you specifically mean "is this boolean flag
+     * on" — it returns `false` outright for any non-boolean flag instead.
+     */
     public fun asBool(): Boolean {
-        return when (val value = getValue()) {
-            is Boolean -> value
-            is Number -> value.toDouble() != 0.0
-            else -> value.toString().toBooleanStrictOrNull() ?: false
+        if (type != FlagType.BOOLEAN) {
+            return true
         }
+        return getValue() as? Boolean ?: false
     }
 
     public fun asString(): String = getValue().toString()

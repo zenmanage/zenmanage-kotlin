@@ -41,8 +41,54 @@ class FlagTest {
             target = FlagTarget(value = TargetValue(value = RawFlagValue(stringValue = "abc")))
         )
 
-        assertThat(stringFlag.asBool()).isFalse()
+        // asBool() on a non-boolean-typed flag is always true, regardless of the underlying
+        // value — it never attempts to parse the value as a boolean.
+        assertThat(stringFlag.asBool()).isTrue()
         assertThat(stringFlag.asString()).isEqualTo("abc")
+    }
+
+    @Test
+    fun asBoolIsAlwaysTrueForNonBooleanTypedFlagsRegardlessOfUnderlyingValue() {
+        val falsyStringFlag = Flag(
+            version = "1",
+            type = FlagType.STRING,
+            key = "falsy-string",
+            name = "falsy-string",
+            target = FlagTarget(value = TargetValue(value = RawFlagValue(stringValue = ""))),
+            rules = emptyList(),
+            rollout = null
+        )
+        assertThat(falsyStringFlag.asBool()).isTrue()
+
+        val literalFalseStringFlag = falsyStringFlag.copy(
+            target = FlagTarget(value = TargetValue(value = RawFlagValue(stringValue = "false")))
+        )
+        assertThat(literalFalseStringFlag.asBool()).isTrue()
+
+        val zeroNumberFlag = falsyStringFlag.copy(
+            type = FlagType.NUMBER,
+            target = FlagTarget(value = TargetValue(value = RawFlagValue(numberValue = 0.0)))
+        )
+        assertThat(zeroNumberFlag.asBool()).isTrue()
+
+        val jsonFlag = falsyStringFlag.copy(
+            type = FlagType.JSON,
+            target = FlagTarget(value = TargetValue(value = RawFlagValue(jsonValue = mapOf("a" to 1))))
+        )
+        assertThat(jsonFlag.asBool()).isTrue()
+
+        val emptyJsonFlag = falsyStringFlag.copy(
+            type = FlagType.JSON,
+            target = FlagTarget(value = TargetValue(value = RawFlagValue(jsonValue = emptyMap<String, Any?>())))
+        )
+        assertThat(emptyJsonFlag.asBool()).isTrue()
+
+        // A boolean-typed flag is the only case where asBool() reflects the actual value.
+        val falseBooleanFlag = falsyStringFlag.copy(
+            type = FlagType.BOOLEAN,
+            target = FlagTarget(value = TargetValue(value = RawFlagValue(booleanValue = false)))
+        )
+        assertThat(falseBooleanFlag.asBool()).isFalse()
     }
 
     @Test
@@ -113,6 +159,7 @@ class FlagTest {
         )
 
         assertThat(jsonFlag.isEnabled()).isFalse()
+        assertThat(jsonFlag.asBool()).isTrue()
         assertThat(jsonFlag.asString()).isEqualTo("")
         assertThat(jsonFlag.asNumber()).isEqualTo(0.0)
     }
