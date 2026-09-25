@@ -9,6 +9,7 @@ import com.zenmanage.kotlin.config.Logger
 import com.zenmanage.kotlin.config.NullLogger
 import com.zenmanage.kotlin.context.Context
 import com.zenmanage.kotlin.errors.EvaluationException
+import com.zenmanage.kotlin.errors.FetchRulesException
 import com.zenmanage.kotlin.rules.RuleEngine
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -132,6 +133,54 @@ class FlagManagerTest {
 
         assertThat(apiClient.lastReportedKey).isEqualTo("new-dashboard")
         assertThat(apiClient.lastDefaultValue).isEqualTo(true)
+    }
+
+    @Test
+    fun singleFallsBackToInlineDefaultWhenRulesFetchFails() {
+        val manager = FlagManager(
+            apiClient = FailingApiClient(),
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        // An unreachable/invalid environment (e.g. a 401) must not propagate out of single() when
+        // the caller supplied an inline default — it should be served instead, mirroring the
+        // reference PHP SDK's loadFlagsOrFallBackToDefaults() behavior.
+        val flag = manager.single("new-checkout", true)
+        assertThat(flag.asBool()).isTrue()
+        assertThat(flag.isEnabled()).isTrue()
+    }
+
+    @Test
+    fun singleFallsBackToDefaultsCollectionWhenRulesFetchFails() {
+        val manager = FlagManager(
+            apiClient = FailingApiClient(),
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        val defaults = DefaultsCollection().set("welcome-text", "hello")
+        val flag = manager.withDefaults(defaults).single("welcome-text")
+        assertThat(flag.asString()).isEqualTo("hello")
+    }
+
+    @Test
+    fun singleStillThrowsWhenRulesFetchFailsAndNoDefaultProvided() {
+        val manager = FlagManager(
+            apiClient = FailingApiClient(),
+            cache = InMemoryCache(),
+            ruleEngine = RuleEngine(),
+            cacheTtlSeconds = 60,
+            logger = NullLogger()
+        )
+
+        assertThrows(EvaluationException::class.java) {
+            manager.single("no-default-available")
+        }
     }
 
     @Test
@@ -444,6 +493,25 @@ class FlagManagerTest {
             jacksonObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
         override fun getRules(): RulesResponse = objectMapper.readValue(rawJson, RulesResponse::class.java)
+
+        override fun reportUsage(key: String, context: Context?, defaultValue: Any?): Unit = Unit
+    }
+
+    /**
+     * Simulates an unreachable/invalid environment (e.g. a 401 from the CDN), the way
+     * [com.zenmanage.kotlin.api.ApiClient.getRules] surfaces such failures after retries.
+     */
+    private class FailingApiClient : ApiClient(
+        environmentToken = "mob_test",
+        apiEndpoint = "https://example.com",
+        logger = NullLogger(),
+        usageReportingEnabled = false,
+        sdkVersion = "test",
+        clientAgent = "zenmanage-kotlin-test"
+    ) {
+        override fun getRules(): RulesResponse {
+            throw FetchRulesException("CDN request failed with status 401", 401)
+        }
 
         override fun reportUsage(key: String, context: Context?, defaultValue: Any?): Unit = Unit
     }
