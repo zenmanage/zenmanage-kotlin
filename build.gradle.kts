@@ -1,10 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "2.2.21"
     `java-library`
-    `maven-publish`
-    signing
+    id("com.vanniktech.maven.publish") version "0.37.0"
     jacoco
 }
 
@@ -28,7 +29,20 @@ dependencies {
 }
 
 kotlin {
+    // Build with JDK 21, but emit Java 11 bytecode so the artifact runs on the JDK 11+ and
+    // Android consumers the README promises. Without this, the class files target JDK 21.
     jvmToolchain(21)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+        // Emit Kotlin 2.0 metadata so consumers on Kotlin 2.0 and newer can read the artifact.
+        apiVersion.set(KotlinVersion.KOTLIN_2_0)
+        languageVersion.set(KotlinVersion.KOTLIN_2_0)
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -38,11 +52,6 @@ tasks.withType<KotlinCompile>().configureEach {
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
-}
-
-java {
-    withSourcesJar()
-    withJavadocJar()
 }
 
 jacoco {
@@ -99,54 +108,23 @@ tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
+// Maven Central (Central Portal). The plugin builds the sources and Javadoc jars, and reads the POM
+// name, license, developer and SCM fields from the POM_* keys in gradle.properties. It signs the
+// publication when a signing key is configured. Credentials and key material come from Gradle
+// properties or ORG_GRADLE_PROJECT_* environment variables; see docs/PUBLISHING_NEXT_STEPS.md.
+mavenPublishing {
+    publishToMavenCentral()
 
-            pom {
-                name.set(property("POM_NAME") as String)
-                description.set(property("POM_DESCRIPTION") as String)
-                url.set(property("POM_URL") as String)
-                inceptionYear.set(property("POM_INCEPTION_YEAR") as String)
-
-                licenses {
-                    license {
-                        name.set(property("POM_LICENSE_NAME") as String)
-                        url.set(property("POM_LICENSE_URL") as String)
-                        distribution.set(property("POM_LICENSE_DIST") as String)
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set(property("POM_DEVELOPER_ID") as String)
-                        name.set(property("POM_DEVELOPER_NAME") as String)
-                        email.set(property("POM_DEVELOPER_EMAIL") as String)
-                    }
-                }
-
-                scm {
-                    url.set(property("POM_SCM_URL") as String)
-                    connection.set(property("POM_SCM_CONNECTION") as String)
-                    developerConnection.set(property("POM_SCM_DEV_CONNECTION") as String)
-                }
-            }
-        }
+    if (hasProperty("signingInMemoryKey") || hasProperty("signing.keyId")) {
+        signAllPublications()
     }
 
-    repositories {
-        maven {
-            name = "OSSRH"
-            val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-            credentials {
-                username = System.getenv("SONATYPE_USERNAME")
-                password = System.getenv("SONATYPE_PASSWORD")
-            }
-        }
+    coordinates(group.toString(), "zenmanage-kotlin", version.toString())
+}
 
+publishing {
+    // Secondary channel: GitHub Packages. Consumers need a token with read:packages to resolve it.
+    repositories {
         maven {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/zenmanage/zenmanage-kotlin")
@@ -155,15 +133,5 @@ publishing {
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
-    }
-}
-
-signing {
-    val signingKey = System.getenv("GPG_PRIVATE_KEY")
-    val signingPassword = System.getenv("GPG_PASSPHRASE")
-
-    if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
-        useInMemoryPgpKeys(signingKey, signingPassword)
-        sign(publishing.publications)
     }
 }

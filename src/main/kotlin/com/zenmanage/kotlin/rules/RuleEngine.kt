@@ -5,8 +5,15 @@ import com.zenmanage.kotlin.flags.Rule
 import com.zenmanage.kotlin.flags.RuleCondition
 
 public class RuleEngine {
+    /**
+     * Returns the first rule that matches the context, lowest `position` first.
+     *
+     * The rules payload isn't guaranteed to arrive in `position` order, so the engine orders them
+     * itself, the same as the Swift, PHP, Ruby, and Flutter SDKs. Rules without a `position` count
+     * as `0`, and rules that share a position keep their payload order.
+     */
     public fun evaluate(rules: List<Rule>, context: Context): Rule? {
-        return rules.firstOrNull { evaluateRule(it, context) }
+        return rules.sortedBy { it.position ?: 0 }.firstOrNull { evaluateRule(it, context) }
     }
 
     private fun evaluateRule(rule: Rule, context: Context): Boolean {

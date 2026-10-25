@@ -49,6 +49,7 @@ public open class ApiClient(
                     .timeout(Duration.ofSeconds(10))
                     .GET()
                     .header("Accept", "application/json")
+                    .header("X-ZEN-CLIENT-AGENT", baseHeaders.getValue("X-ZEN-CLIENT-AGENT"))
                     .build()
 
                 val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))

@@ -1,5 +1,6 @@
 package com.zenmanage.kotlin.config
 
+import com.zenmanage.kotlin.ZenmanageSDK
 import com.zenmanage.kotlin.cache.Cache
 import com.zenmanage.kotlin.errors.ConfigurationException
 
@@ -12,7 +13,7 @@ public class ConfigBuilder private constructor() {
     private var apiEndpoint: String = DEFAULT_API_ENDPOINT
     private var logger: Logger? = null
     private var customCache: Cache? = null
-    private var sdkVersion: String = "0.1.0"
+    private var sdkVersion: String = ZenmanageSDK.VERSION
     private var clientAgent: String = "zenmanage-kotlin"
 
     public fun withEnvironmentToken(token: String): ConfigBuilder {

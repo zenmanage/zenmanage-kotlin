@@ -1,108 +1,49 @@
-# Publishing Next Steps for zenmanage-kotlin
+# Publishing zenmanage-kotlin
 
-This guide outlines practical next steps to publish the Kotlin SDK to major public package repositories.
+The SDK ships to Maven Central through the Sonatype Central Portal (OSSRH was retired in 2025,
+so the old `s01.oss.sonatype.org` flow no longer works). GitHub Packages is a secondary channel.
 
-## 1. Repository Readiness Checklist
+Coordinates: `com.zenmanage:zenmanage-kotlin`
 
-Before publishing anywhere:
+## One-time setup
 
-1. Ensure legal/project metadata is complete in Gradle and POM fields:
-   - group/artifact/version
-   - license
-   - SCM URLs
-   - developer/contact information
-2. Ensure all CI checks are green:
-   - `./gradlew clean check`
-   - coverage gates
-3. Tag a release candidate in Git:
-   - `git tag v0.1.0`
-   - `git push origin v0.1.0`
-4. Prepare release notes/changelog.
+1. **Central Portal account and namespace.** Sign in at https://central.sonatype.com and claim the
+   `com.zenmanage` namespace. Verify it with the DNS TXT record the portal gives you on zenmanage.com.
+2. **User token.** In the portal, generate a user token. Its username and password are what Gradle
+   uses. They are not your login.
+3. **GPG key.** Create a signing key (`gpg --full-generate-key`), then publish the public key so the
+   portal can verify signatures:
+   `gpg --keyserver keyserver.ubuntu.com --send-keys <KEY_ID>`
+4. **Credentials for Gradle.** Set these as environment variables (CI) or in `~/.gradle/gradle.properties`:
+   - `ORG_GRADLE_PROJECT_mavenCentralUsername`: token username
+   - `ORG_GRADLE_PROJECT_mavenCentralPassword`: token password
+   - `ORG_GRADLE_PROJECT_signingInMemoryKey`: output of `gpg --export-secret-keys --armor <KEY_ID>`
+   - `ORG_GRADLE_PROJECT_signingInMemoryKeyPassword`: the key's passphrase, if it has one
 
-## 2. Publish to Maven Central (Sonatype)
+Without the signing properties, `publishToMavenCentral` still uploads, but the portal rejects unsigned
+artifacts.
 
-Maven Central should be the primary channel for Kotlin/Android dependency resolution.
+## Release steps
 
-### One-time setup
+1. Make sure the version matches in three places: `version` in `gradle.properties`,
+   `ZenmanageSDK.VERSION` in `src/main/kotlin/com/zenmanage/kotlin/ZenmanageSDK.kt`, and the dated
+   `## [x.y.z] - YYYY-MM-DD` section in `CHANGELOG.md`. `ZenmanageSDKVersionTest` checks all three.
+2. Run the full gate: `./gradlew clean check` (unit tests and the coverage gate).
+3. Upload: `./gradlew publishToMavenCentral`. This creates a deployment in the Central Portal.
+   Review it there and click **Publish**. (Use `./gradlew publishAndReleaseToMavenCentral` only if you
+   want the portal to release it automatically.)
+4. Confirm the artifact appears at https://repo1.maven.org/maven2/com/zenmanage/zenmanage-kotlin/ with
+   `.jar`, `-sources.jar`, `-javadoc.jar`, `.pom` and `.asc` files.
+5. Tag the release as plain `x.y.z` (no `v` prefix): `git tag 1.0.0 && git push origin 1.0.0`, then
+   create the GitHub Release from the tag.
+6. Optional, GitHub Packages: `./gradlew publishAllPublicationsToGitHubPackagesRepository`, with
+   `GITHUB_ACTOR` and a `GITHUB_TOKEN` that has `write:packages`.
+7. Register the SDK with the website: add `Kotlin` to `config('zenmanage.published_sdks')` in the
+   api repo. The client agent family `zenmanage-kotlin` is already allow-listed in
+   `EnsureClientAgentIsValid`.
 
-1. Create a Sonatype Central account: https://central.sonatype.com/
-2. Verify namespace ownership for the group (for example, `com.zenmanage`).
-3. Generate and securely store a GPG keypair for artifact signing.
-4. Configure credentials as CI or local environment variables:
-   - `SONATYPE_USERNAME`
-   - `SONATYPE_PASSWORD`
-   - `GPG_PRIVATE_KEY`
-   - `GPG_PASSPHRASE`
+## Checking a build without publishing
 
-### Release command
-
-```bash
-./gradlew clean publish sign
-```
-
-### Validation
-
-1. Confirm package appears on Maven Central with sources/javadocs.
-2. Validate install in a clean sample app.
-
-## 3. Publish to GitHub Packages
-
-Use GitHub Packages as a secondary distribution channel.
-
-### Setup
-
-1. Ensure repository package permissions are enabled.
-2. Configure credentials:
-   - `GITHUB_ACTOR`
-   - `GITHUB_TOKEN` (with `write:packages`)
-
-### Publish command
-
-```bash
-./gradlew publishAllPublicationsToGitHubPackagesRepository
-```
-
-## 4. JitPack and jCenter Compatibility Path
-
-JitPack can provide immediate tag-based distribution and a migration path for legacy jCenter consumers.
-
-### JitPack steps
-
-1. Ensure repository is public and build is reproducible with `./gradlew clean test`.
-2. Create and push a version tag:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-3. Verify build at `https://jitpack.io/#zenmanage/zenmanage-kotlin/v0.1.0`.
-
-### jCenter note
-
-- jCenter is read-only and no longer accepts new package onboarding.
-- For teams still resolving from jCenter mirrors, publish to Maven Central and optionally JitPack, then provide migration guidance in README/UPGRADING docs.
-
-## 5. CI/CD Automation Recommendations
-
-Automate release quality and deployment with GitHub Actions:
-
-1. `ci.yml`: build/test/coverage on every PR.
-2. `release.yml`: publish on semver tag pushes.
-3. Keep signing and repository credentials in GitHub Actions secrets.
-
-## 6. Post-Publish Validation
-
-After each release:
-
-1. Validate artifact metadata, checksums, and signatures.
-2. Confirm Android and JVM sample apps resolve and run.
-3. Announce release with upgrade notes.
-
-## 7. Versioning Policy
-
-Recommended approach:
-
-1. Follow SemVer strictly.
-2. Maintain `CHANGELOG.md` in Keep a Changelog style.
-3. Provide `UPGRADING.md` for breaking changes.
+- `./gradlew publishToMavenLocal` installs to `~/.m2`, so you can inspect the POM and jars.
+- The POM's name, license, developer and SCM fields come from the `POM_*` keys in `gradle.properties`.
+  Edit them there, not in `build.gradle.kts`.
