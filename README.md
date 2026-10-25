@@ -13,16 +13,18 @@ Add feature flags to your Kotlin and Android applications in minutes. Control fe
 ## Requirements
 
 - JDK 11+
-- Kotlin 1.9+
+- Kotlin 2.0+
 - Android apps: API level 21+ (for SharedPreferences integration)
 
 ## Installation
+
+The SDK is published to [Maven Central](https://central.sonatype.com/artifact/com.zenmanage/zenmanage-kotlin).
 
 ### Gradle (Kotlin DSL)
 
 ```kotlin
 dependencies {
-    implementation("com.zenmanage:zenmanage-kotlin:0.1.0")
+    implementation("com.zenmanage:zenmanage-kotlin:1.0.0")
 }
 ```
 
@@ -30,7 +32,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'com.zenmanage:zenmanage-kotlin:0.1.0'
+    implementation 'com.zenmanage:zenmanage-kotlin:1.0.0'
 }
 ```
 

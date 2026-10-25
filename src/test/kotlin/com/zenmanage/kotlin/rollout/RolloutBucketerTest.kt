@@ -1,5 +1,6 @@
 package com.zenmanage.kotlin.rollout
 
+import com.zenmanage.kotlin.errors.EvaluationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -20,8 +21,15 @@ class RolloutBucketerTest {
 
     @Test
     fun invalidPercentageThrows() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows(EvaluationException::class.java) {
             RolloutBucketer.isInBucket("s", "u", 101.0)
+        }
+    }
+
+    @Test
+    fun negativePercentageThrows() {
+        assertThrows(EvaluationException::class.java) {
+            RolloutBucketer.isInBucket("s", "u", -0.5)
         }
     }
 }
