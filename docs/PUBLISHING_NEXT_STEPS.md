@@ -29,7 +29,7 @@ artifacts.
    `ZenmanageSDK.VERSION` in `src/main/kotlin/com/zenmanage/kotlin/ZenmanageSDK.kt`, and the dated
    `## [x.y.z] - YYYY-MM-DD` section in `CHANGELOG.md`. `ZenmanageSDKVersionTest` checks all three.
 2. Run the full gate: `./gradlew clean check` (unit tests and the coverage gate).
-3. Upload: `./gradlew publishToMavenCentral`. This creates a deployment in the Central Portal.
+3. Upload: publishing a GitHub Release runs `.github/workflows/release.yml`, which checks the tag against the Gradle version and then runs `./gradlew clean check publishToMavenCentral`. To upload from your machine instead, run `./gradlew publishToMavenCentral`. This creates a deployment in the Central Portal.
    Review it there and click **Publish**. (Use `./gradlew publishAndReleaseToMavenCentral` only if you
    want the portal to release it automatically.)
 4. Confirm the artifact appears at https://repo1.maven.org/maven2/com/zenmanage/zenmanage-kotlin/ with
