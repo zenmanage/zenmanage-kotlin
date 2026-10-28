@@ -24,7 +24,7 @@ The SDK is published to [Maven Central](https://central.sonatype.com/artifact/co
 
 ```kotlin
 dependencies {
-    implementation("com.zenmanage:zenmanage-kotlin:1.0.0")
+    implementation("com.zenmanage:zenmanage-kotlin:1.0.1")
 }
 ```
 
@@ -32,7 +32,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'com.zenmanage:zenmanage-kotlin:1.0.0'
+    implementation 'com.zenmanage:zenmanage-kotlin:1.0.1'
 }
 ```
 

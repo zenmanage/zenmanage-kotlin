@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-28
+
+- Publishing: the release workflow uploads to Maven Central on each GitHub Release. The in-repo publishing checklist was removed.
+
 ## [1.0.0] - 2026-10-25
 
 First stable release. From 1.0.0 on, the public API follows semantic versioning.

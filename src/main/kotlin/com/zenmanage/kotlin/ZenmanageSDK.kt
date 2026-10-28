@@ -9,5 +9,5 @@ package com.zenmanage.kotlin
  * fails if they drift.
  */
 public object ZenmanageSDK {
-    public const val VERSION: String = "1.0.0"
+    public const val VERSION: String = "1.0.1"
 }
