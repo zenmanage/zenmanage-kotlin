@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.4.21"
     `java-library`
     id("com.vanniktech.maven.publish") version "0.37.0"
     jacoco
@@ -17,14 +17,14 @@ repositories {
 }
 
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-databind:2.18.0")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.0")
+    api("com.fasterxml.jackson.core:jackson-databind:2.22.4")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.4")
 
     compileOnly("com.google.android:android:4.1.1.4")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.1")
-    testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation("com.google.android:android:4.1.1.4")
 }
 
