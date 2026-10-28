@@ -24,7 +24,7 @@ The SDK is published to [Maven Central](https://central.sonatype.com/artifact/co
 
 ```kotlin
 dependencies {
-    implementation("com.zenmanage:zenmanage-kotlin:1.0.0")
+    implementation("com.zenmanage:zenmanage-kotlin:1.0.1")
 }
 ```
 
@@ -32,7 +32,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'com.zenmanage:zenmanage-kotlin:1.0.0'
+    implementation 'com.zenmanage:zenmanage-kotlin:1.0.1'
 }
 ```
 
@@ -208,7 +208,3 @@ Run tests and coverage report:
 Coverage report output:
 
 - `build/reports/jacoco/test/html/index.html`
-
-## Publishing
-
-See [docs/PUBLISHING_NEXT_STEPS.md](docs/PUBLISHING_NEXT_STEPS.md) for a checklist covering Maven Central, GitHub Packages, and JitPack/jCenter compatibility options.
