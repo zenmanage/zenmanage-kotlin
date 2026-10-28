@@ -111,7 +111,7 @@ tasks.check {
 // Maven Central (Central Portal). The plugin builds the sources and Javadoc jars, and reads the POM
 // name, license, developer and SCM fields from the POM_* keys in gradle.properties. It signs the
 // publication when a signing key is configured. Credentials and key material come from Gradle
-// properties or ORG_GRADLE_PROJECT_* environment variables; see docs/PUBLISHING_NEXT_STEPS.md.
+// properties or ORG_GRADLE_PROJECT_* environment variables.
 mavenPublishing {
     publishToMavenCentral()
 

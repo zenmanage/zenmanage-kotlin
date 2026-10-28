@@ -208,7 +208,3 @@ Run tests and coverage report:
 Coverage report output:
 
 - `build/reports/jacoco/test/html/index.html`
-
-## Publishing
-
-See [docs/PUBLISHING_NEXT_STEPS.md](docs/PUBLISHING_NEXT_STEPS.md) for a checklist covering Maven Central, GitHub Packages, and JitPack/jCenter compatibility options.
