@@ -22,4 +22,4 @@ response to behavior they deem inappropriate, threatening, offensive, or harmful
 
 ## Reporting
 
-Report incidents to support@zenmanage.com.
+Report incidents to hello@zenmanage.com.
