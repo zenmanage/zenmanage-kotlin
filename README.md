@@ -1,5 +1,7 @@
 # Zenmanage Kotlin SDK
 
+[![CI](https://github.com/zenmanage/zenmanage-kotlin/actions/workflows/ci.yml/badge.svg)](https://github.com/zenmanage/zenmanage-kotlin/actions/workflows/ci.yml) [![Version](https://img.shields.io/github/v/release/zenmanage/zenmanage-kotlin)](https://github.com/zenmanage/zenmanage-kotlin/releases) [![License](https://img.shields.io/github/license/zenmanage/zenmanage-kotlin)](LICENSE)
+
 Add feature flags to your Kotlin and Android applications in minutes. Control feature rollouts, run A/B tests, and manage runtime configuration without redeploying.
 
 ## Why Zenmanage?
