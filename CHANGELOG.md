@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-30
+
 ## [1.0.1] - 2026-10-28
 
 - Publishing: the release workflow uploads to Maven Central on each GitHub Release. The in-repo publishing checklist was removed.
