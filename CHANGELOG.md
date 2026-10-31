@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.2] - 2026-10-30
 
+### Changed
+- Upgraded Jackson from 2.18.0 to 2.22.4 (`jackson-databind` and `jackson-module-kotlin`). Both are `api` dependencies, so apps pick up the new version transitively.
+- Upgraded the Kotlin Gradle plugin from 2.2.21 to 2.4.21. `apiVersion` and `languageVersion` stay at 2.0, so Kotlin 2.0+ consumers can still read the published metadata.
+
 ## [1.0.1] - 2026-10-28
 
 - Publishing: the release workflow uploads to Maven Central on each GitHub Release. The in-repo publishing checklist was removed.
