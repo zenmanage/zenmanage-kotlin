@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Pinned GitHub Actions to commit SHAs. No SDK behavior changes.
+
 ## [1.0.2] - 2026-10-30
 
 ### Changed
