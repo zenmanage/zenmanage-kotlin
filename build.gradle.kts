@@ -49,6 +49,15 @@ tasks.withType<KotlinCompile>().configureEach {
     compilerOptions.freeCompilerArgs.add("-Xjsr305=strict")
 }
 
+// JUnit 6 needs Java 17, so the tests are compiled for 17. The shipped (main) code still targets 11.
+tasks.named<KotlinCompile>("compileTestKotlin") {
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+}
+tasks.named<JavaCompile>("compileTestJava") {
+    sourceCompatibility = JavaVersion.VERSION_17.toString()
+    targetCompatibility = JavaVersion.VERSION_17.toString()
+}
+
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
