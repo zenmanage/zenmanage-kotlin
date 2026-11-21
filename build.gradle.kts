@@ -17,8 +17,8 @@ repositories {
 }
 
 dependencies {
-    api("com.fasterxml.jackson.core:jackson-databind:2.22.4")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.4")
+    api("com.fasterxml.jackson.core:jackson-databind:2.23.0")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.23.0")
 
     compileOnly("com.google.android:android:4.1.1.4")
 
