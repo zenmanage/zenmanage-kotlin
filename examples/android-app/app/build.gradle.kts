@@ -9,7 +9,7 @@ val zenmanageToken: String =
 
 android {
     namespace = "com.zenmanage.kotlin.example"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.zenmanage.kotlin.example"
