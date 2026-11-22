@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- CI now builds the Android example app (`examples/android-app`) on every pull request, so Dependabot bumps to its plugins are verified. No SDK behavior changes.
+
 ## [1.1.0] - 2026-11-21
 
 ### Changed
