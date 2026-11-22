@@ -4,8 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-21
+
 ### Changed
 
+- Upgraded Jackson from 2.22.4 to 2.23.0 (`jackson-databind` and `jackson-module-kotlin`). Both are `api` dependencies, so apps pick up the new version transitively.
+- Upgraded JUnit Jupiter from 5.11.1 to 6.1.3 for the test suite, which now compiles for Java 17. The published artifact still targets Java 11.
 - Pinned GitHub Actions to commit SHAs. No SDK behavior changes.
 
 ## [1.0.2] - 2026-10-30
