@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- The Android example app builds at `minSdk = 21`, the lowest API level the README promises, so CI catches a dependency that raises it.
+- The Android example app builds at `minSdk = 21`, the lowest API level the README promises, so CI catches a dependency that raises it. The example no longer depends on Material Components, which needs API 23 and was only used for the theme.
 
 - CI now builds the Android example app (`examples/android-app`) on every pull request, so Dependabot bumps to its plugins are verified. No SDK behavior changes.
 
