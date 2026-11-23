@@ -13,7 +13,8 @@ android {
 
     defaultConfig {
         applicationId = "com.zenmanage.kotlin.example"
-        minSdk = 26
+        // Keep this at the lowest API level the README promises, so CI catches a dependency that needs more.
+        minSdk = 21
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -42,10 +43,8 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.19.1")
-    implementation("androidx.appcompat:appcompat:1.8.0")
-    implementation("com.google.android.material:material:1.14.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    // Dispatchers.Main for the activity's coroutine scope.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     implementation("com.zenmanage:zenmanage-kotlin:1.1.0")
 }

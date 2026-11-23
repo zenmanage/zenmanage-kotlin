@@ -7,6 +7,12 @@ updates:
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
+    ignore:
+      # jackson-module-kotlin 2.20+ breaks dexing below Android API 26 (ZEN-2226). Patch
+      # releases of 2.19 are fine; take a newer minor only after the example-android job
+      # passes at minSdk 21.
+      - dependency-name: "com.fasterxml.jackson.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: "gradle"
     directory: "/examples/android-app"
