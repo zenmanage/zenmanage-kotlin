@@ -43,9 +43,8 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.19.1")
-    implementation("androidx.appcompat:appcompat:1.8.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    // Dispatchers.Main for the activity's coroutine scope.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     implementation("com.zenmanage:zenmanage-kotlin:1.1.0")
 }
