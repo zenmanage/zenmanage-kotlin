@@ -44,7 +44,7 @@ android {
 
 dependencies {
     // Dispatchers.Main for the activity's coroutine scope.
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     implementation("com.zenmanage:zenmanage-kotlin:1.1.1")
 }
