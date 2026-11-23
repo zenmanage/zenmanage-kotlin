@@ -7,6 +7,10 @@ updates:
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
+    ignore:
+      # 2.23.x breaks dexing below Android API 26 (ZEN-2226).
+      - dependency-name: "com.fasterxml.jackson.*"
+        versions: ["2.23.*"]
 
   - package-ecosystem: "gradle"
     directory: "/examples/android-app"

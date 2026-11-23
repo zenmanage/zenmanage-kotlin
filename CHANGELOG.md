@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Android apps with `minSdk` below 26 failed to build with 1.1.0 ("MethodHandle.invoke and MethodHandle.invokeExact are only supported starting with Android O"). Jackson goes back from 2.23.0 to 2.22.4 (`jackson-databind` and `jackson-module-kotlin`), which dexes down to API 21 as the README promises. Dependabot now skips Jackson 2.23.x.
+
 ### Changed
+
+- The Android example app builds at `minSdk = 21`, the lowest API level the README promises, so CI catches a dependency that raises it.
 
 - CI now builds the Android example app (`examples/android-app`) on every pull request, so Dependabot bumps to its plugins are verified. No SDK behavior changes.
 

@@ -13,7 +13,8 @@ android {
 
     defaultConfig {
         applicationId = "com.zenmanage.kotlin.example"
-        minSdk = 26
+        // Keep this at the lowest API level the README promises, so CI catches a dependency that needs more.
+        minSdk = 21
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
