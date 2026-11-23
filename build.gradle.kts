@@ -21,8 +21,8 @@ dependencies {
     // (value class support), which Android's D8 only dexes from API 26. The README promises API 21+,
     // and these are `api` dependencies, so every Android consumer inherits them. Raise only once a
     // release dexes at minSdk 21 (the example-android CI job checks that).
-    api("com.fasterxml.jackson.core:jackson-databind:2.19.4")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.4")
+    api("com.fasterxml.jackson.core:jackson-databind:2.23.0")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.23.0")
 
     compileOnly("com.google.android:android:4.1.1.4")
 
